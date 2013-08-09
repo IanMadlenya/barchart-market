@@ -18,8 +18,25 @@
 		<connection>scm:git:git://github.com/barchart/barchart-market.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/barchart/barchart-market.git</developerConnection>
 	</scm>
+	
+	<properties>
+		<projectJavaVersion>1.7</projectJavaVersion>
+	</properties>
   	
   	<dependencies>
+  	
+  		<dependency>
+    		<groupId>com.netflix.rxjava</groupId>
+    		<artifactId>rxjava-core</artifactId>
+    		<version>0.10.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.barchart.util</groupId>
+			<artifactId>barchart-util-value-impl</artifactId>
+			<version>[7-SNAPSHOT,8-SNAPSHOT)</version>
+			<scope>test</scope>
+		</dependency>
   	
   	</dependencies>
   	

@@ -2,6 +2,7 @@ package com.barchart.market.matcher.api.model;
 
 import com.barchart.feed.api.model.data.Book;
 import com.barchart.feed.api.model.data.Trade;
+import com.barchart.util.value.api.Time;
 
 public interface Update extends Message {
 
@@ -14,6 +15,8 @@ public interface Update extends Message {
 	Book.Top top();
 	
 	Trade trade();
+	
+	Time time();
 	
 	@Override
 	boolean isNull();

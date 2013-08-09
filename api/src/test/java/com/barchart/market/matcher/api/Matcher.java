@@ -9,7 +9,7 @@ import com.barchart.util.value.api.Size;
 
 public interface Matcher extends Observer<Update> {
 	
-	void bindObserver(Observer<Fill> fillObs);
+	void subscribe(Observer<Fill> fillObs);
 
 	void addOrder(Order order);
 	
