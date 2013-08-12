@@ -5,10 +5,10 @@ import java.util.Map;
 
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
-import com.barchart.market.matcher.api.model.order.Order;
+import com.barchart.market.matcher.api.model.order.OrderState;
 
 public interface Allocator {
 
-	Map<Order, Fill> allocate(List<Order> orders, Update update);
+	Map<OrderState, Fill> allocate(List<OrderState> orders, Update update);
 	
 }

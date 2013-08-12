@@ -7,7 +7,7 @@ import java.util.Map;
 import com.barchart.market.matcher.api.Allocator;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
-import com.barchart.market.matcher.api.model.order.Order;
+import com.barchart.market.matcher.api.model.order.OrderState;
 
 /*
  * Dummy allocator
@@ -15,10 +15,10 @@ import com.barchart.market.matcher.api.model.order.Order;
 public class DumbAllocator implements Allocator {
 
 	@Override
-	public Map<Order, Fill> allocate(final List<Order> orders, 
+	public Map<OrderState, Fill> allocate(final List<OrderState> orders, 
 			final Update update) {
 		
-		final Map<Order, Fill> result = new HashMap<>();
+		final Map<OrderState, Fill> result = new HashMap<>();
 		
 		return result;
 	}

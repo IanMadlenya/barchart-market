@@ -10,7 +10,11 @@ public interface Order {
 	
 	Instrument instrument();
 	
+	String id();
+	
 	Time created();
+	
+	Time modified();
 	
 	Book.Side side();
 	

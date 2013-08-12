@@ -18,6 +18,7 @@ import com.barchart.market.matcher.api.Matcher;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
 import com.barchart.market.matcher.api.model.order.Order;
+import com.barchart.market.matcher.api.model.order.OrderState;
 import com.barchart.util.value.api.Price;
 import com.barchart.util.value.api.Size;
 
@@ -25,18 +26,18 @@ import com.barchart.util.value.api.Size;
  * Remember:
  * Matcher is per instrument and trading instance, which is per user/account
  */
-public class TestMatcher implements Matcher {
+public class BaseMatcher implements Matcher {
 	
 	protected static final Logger log = LoggerFactory
-			.getLogger(TestMatcher.class);
+			.getLogger(BaseMatcher.class);
 	
-	private final NavigableMap<Price, List<Order>> asks = 
+	private final NavigableMap<Price, List<OrderState>> asks = 
 			new TreeMap<>();
 			
 	private final Allocator allocator = new DumbAllocator();
 			
 	/* Reverse order for bids */
-	private final NavigableMap<Price, List<Order>> bids =
+	private final NavigableMap<Price, List<OrderState>> bids =
 			new ConcurrentSkipListMap<>(new Comparator<Price>() {
 
 				@Override
@@ -61,10 +62,10 @@ public class TestMatcher implements Matcher {
 	}
 
 	@Override
-	public synchronized void addOrder(final Order order) {
+	public synchronized void add(final OrderState order) {
 		
 		if(!side(order.side()).containsKey(order.price())) {
-			side(order.side()).put(order.price(), new ArrayList<Order>());
+			side(order.side()).put(order.price(), new ArrayList<OrderState>());
 		}
 		
 		// Check for crossed orders
@@ -76,10 +77,10 @@ public class TestMatcher implements Matcher {
 	}
 
 	@Override
-	public synchronized void modifyOrder(final Order order, final Price oldPrice, 
+	public synchronized void modify(final OrderState order, final Price oldPrice, 
 			final Size oldSize) {
 		
-		final NavigableMap<Price, List<Order>> book = side(order.side());
+		final NavigableMap<Price, List<OrderState>> book = side(order.side());
 		
 		if(!book.containsKey(oldPrice) || !book.get(oldPrice).contains(order)) {
 			log.warn("Unable to find {} at price {}", order, oldPrice);
@@ -93,7 +94,7 @@ public class TestMatcher implements Matcher {
 			book.get(oldPrice).remove(order);
 			
 			if(!book.containsKey(order.price())) {
-				book.put(order.price(), new ArrayList<Order>());
+				book.put(order.price(), new ArrayList<OrderState>());
 			}
 			
 			book.get(order.price()).add(order);
@@ -119,7 +120,7 @@ public class TestMatcher implements Matcher {
 	}
 	
 	@Override
-	public synchronized void removeOrder(final Order order) {
+	public synchronized void remove(final OrderState order) {
 
 		if(!side(order.side()).containsKey(order.price())) {
 			log.warn("Order price {} not in order book", order.price());
@@ -138,6 +139,7 @@ public class TestMatcher implements Matcher {
 	}
 	
 	// Totally filled orders are automatically removed internally
+	// Partially filled orders are modified internally
 	@Override
 	public void onNext(final Update update) {
 		
@@ -151,12 +153,12 @@ public class TestMatcher implements Matcher {
 			if(!asks.isEmpty()) {
 				
 				/* Fill all offers less than or equal to best bid price */
-				for(final Entry<Price, List<Order>> e : asks.entrySet()) {
+				for(final Entry<Price, List<OrderState>> e : asks.entrySet()) {
 					
 					if(e.getKey().compareTo(update.top().bid().price()) <= 0) {
-						for(final Order o: e.getValue()) {
+						for(final OrderState o: e.getValue()) {
 							newFills.add(MessageFactory.fill(o, update.time(), 
-									update.trade().size()));
+									o.qty()));
 						}
 					}
 				}
@@ -165,12 +167,12 @@ public class TestMatcher implements Matcher {
 			if(!bids.isEmpty()) {
 				
 				/* Fill all bids greater than or equal to best ask price */
-				for(final Entry<Price, List<Order>> e : bids.entrySet()) {
+				for(final Entry<Price, List<OrderState>> e : bids.entrySet()) {
 			
 					if(e.getKey().compareTo(update.top().ask().price()) >= 0) {
-						for(final Order o: e.getValue()) {
+						for(final OrderState o: e.getValue()) {
 							newFills.add(MessageFactory.fill(o, update.time(), 
-									update.trade().size()));
+									o.qty()));
 						}
 					}
 				}
@@ -182,13 +184,13 @@ public class TestMatcher implements Matcher {
 			if(!asks.isEmpty()) {
 				
 				/* Fill all offers less than trade price */
-				for(final Entry<Price, List<Order>> e : asks.entrySet()) {
+				for(final Entry<Price, List<OrderState>> e : asks.entrySet()) {
 					
 					if(e.getKey().compareTo(update.trade().price()) < 0) {
 						
-						for(final Order o : e.getValue()) {
+						for(final OrderState o : e.getValue()) {
 							newFills.add(MessageFactory.fill(o, update.time(), 
-									update.trade().size()));
+									o.qty()));
 						}
 						
 					} else break;
@@ -198,12 +200,12 @@ public class TestMatcher implements Matcher {
 			if(!bids.isEmpty()) {
 				
 				/* Fill all bids greater than trade price */
-				for(final Entry<Price, List<Order>> e : bids.entrySet()) {
+				for(final Entry<Price, List<OrderState>> e : bids.entrySet()) {
 					if(e.getKey().compareTo(update.trade().price()) > 0) {
 						
-						for(final Order o : e.getValue()) {
+						for(final OrderState o : e.getValue()) {
 							newFills.add(MessageFactory.fill(o, update.time(), 
-									update.trade().size()));
+									o.qty()));
 						}
 						
 					} else break;
@@ -215,7 +217,7 @@ public class TestMatcher implements Matcher {
 			if(asks.firstKey().equals(update.trade().price())) {
 				
 				/* Allocate */
-				for(final Entry<Order, Fill> e : allocator.allocate(
+				for(final Entry<OrderState, Fill> e : allocator.allocate(
 						side(Book.Side.ASK).get(price), update).entrySet()) {
 					newFills.add(e.getValue());
 				}
@@ -223,7 +225,7 @@ public class TestMatcher implements Matcher {
 			} else if(bids.firstKey().equals(update.trade().price())) {
 				
 				/* Allocate */
-				for(final Entry<Order, Fill> e : allocator.allocate(
+				for(final Entry<OrderState, Fill> e : allocator.allocate(
 						side(Book.Side.BID).get(price), update).entrySet()) {
 					newFills.add(e.getValue());
 				}
@@ -241,23 +243,35 @@ public class TestMatcher implements Matcher {
 			observer.onNext(fill);
 		}
 		
+		log.debug(printOrders());
+		
 	}
 
 	private void checkRemove(final Fill fill) {
 		
-		if(fill.order().qty().compareTo(fill.qty()) <= 0) {
+		final Price fillRx = fill.price();
+		final Size fillQty = fill.qty();
+		final OrderState order = fill.order();
+		
+		if(order.qty().compareTo(fillQty) <= 0) {
 			
-			if(fill.order().qty().compareTo(fill.qty()) < 0) {
+			if(order.qty().compareTo(fillQty) < 0) {
 				log.error("Fill larger than order qty");
 			}
 			
-			side(fill.side()).get(fill.price()).remove(fill.order());
+			/* Total fill */
+			side(fill.side()).get(fillRx).remove(order);
 			
+		} else {
+			
+			/* Partial fill */
+			order.modify(order.qty().sub(fillQty), fill.executed());
+		
 		}
 		
 	}
 	
-	private NavigableMap<Price, List<Order>> side(final Book.Side side) {
+	private NavigableMap<Price, List<OrderState>> side(final Book.Side side) {
 		return side == Book.Side.ASK ? asks : bids;
 	}
 
@@ -266,12 +280,28 @@ public class TestMatcher implements Matcher {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\n");
 		
-		for(final Entry<Price, List<Order>> e : asks.descendingMap().entrySet()) {
+		for(final Entry<Price, List<OrderState>> e : asks.descendingMap().entrySet()) {
 			
 			sb.append(e.getKey().toString()).append(" : ");
 			
 			for(final Order o : e.getValue()) {
+				sb.append(" { ");
 				sb.append(o.toString()).append(" : ");
+				sb.append(" }\n");
+			}
+			
+			sb.append("\n");
+			
+		}
+		
+		for(final Entry<Price, List<OrderState>> e : bids.entrySet()) {
+			
+			sb.append(e.getKey().toString()).append(" : ");
+			
+			for(final Order o : e.getValue()) {
+				sb.append(" { ");
+				sb.append(o.toString()).append(" : ");
+				sb.append(" }\n");
 			}
 			
 			sb.append("\n");

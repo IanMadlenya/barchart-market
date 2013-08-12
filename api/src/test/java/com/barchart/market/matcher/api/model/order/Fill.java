@@ -8,7 +8,7 @@ import com.barchart.util.value.api.Time;
 
 public interface Fill extends Message {
 
-	Order order();
+	OrderState order();
 	
 	Time executed();
 	
