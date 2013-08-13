@@ -1,30 +1,10 @@
 package com.barchart.market.matcher.api.account;
 
-import com.barchart.feed.api.model.meta.Instrument;
 import com.barchart.feed.api.util.Identifiable;
 import com.barchart.feed.api.util.Identifier;
-import com.barchart.feed.api.util.Observable;
-import com.barchart.feed.api.util.Observer;
-import com.barchart.market.matcher.api.model.Message;
-import com.barchart.market.matcher.api.model.order.OrderRequest;
 import com.barchart.util.value.api.Price;
 
-/**
- * Created for a user, maintains position, account details, verifies orders
- * 
- * @author Gavin M Litchfield
- *
- */
-public interface Account extends Identifiable, Observer<OrderRequest>, Observable<Message> {
-	
-	/**
-	 * Risk module.  Decide how this works in...
-	 */
-	interface Risk {
-		
-	}
-	
-	Position position(Instrument instrument);
+public interface Account extends Identifiable {
 	
 	// From NinjaTrader
 	// Buying Power, Cash Value, Excess Equity, Initial Margin, Initial Margin Overnight
@@ -40,15 +20,8 @@ public interface Account extends Identifiable, Observer<OrderRequest>, Observabl
 	Price previousDayBallance();
 	Price netLiquidity();
 	Price profitLoss();
-	
-	@Override
-	void onNext(OrderRequest orderRequest);
-	
-	@Override
-	void subscribe(Observer<Message> message);
-	
+
 	@Override
 	Identifier id();
-	
 
 }
