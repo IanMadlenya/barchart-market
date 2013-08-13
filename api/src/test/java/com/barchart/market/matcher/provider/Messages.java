@@ -17,9 +17,9 @@ import com.barchart.util.value.api.Price;
 import com.barchart.util.value.api.Size;
 import com.barchart.util.value.api.Time;
 
-public final class MessageFactory {
+public final class Messages {
 
-	private MessageFactory() {
+	private Messages() {
 		
 	}
 	

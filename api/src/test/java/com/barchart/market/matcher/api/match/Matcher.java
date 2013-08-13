@@ -1,4 +1,4 @@
-package com.barchart.market.matcher.api;
+package com.barchart.market.matcher.api.match;
 
 import com.barchart.feed.api.util.Observer;
 import com.barchart.market.matcher.api.model.Update;

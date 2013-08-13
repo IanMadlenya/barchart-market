@@ -1,4 +1,4 @@
-package com.barchart.market.matcher.api;
+package com.barchart.market.matcher.api.match;
 
 import java.util.List;
 import java.util.Map;

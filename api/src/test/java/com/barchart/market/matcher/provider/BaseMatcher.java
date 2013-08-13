@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import com.barchart.feed.api.model.data.Book;
 import com.barchart.feed.api.util.Observer;
-import com.barchart.market.matcher.api.Allocator;
-import com.barchart.market.matcher.api.Matcher;
+import com.barchart.market.matcher.api.match.Allocator;
+import com.barchart.market.matcher.api.match.Matcher;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
 import com.barchart.market.matcher.api.model.order.Order;
@@ -47,6 +47,9 @@ public class BaseMatcher implements Matcher {
 				
 			});
 
+	/*
+	 * Default logging fill observer
+	 */
 	private volatile Observer<Fill> observer = new Observer<Fill>(){
 
 		@Override
@@ -68,9 +71,9 @@ public class BaseMatcher implements Matcher {
 			side(order.side()).put(order.price(), new ArrayList<OrderState>());
 		}
 		
-		// Check for crossed orders
-		
 		side(order.side()).get(order.price()).add(order);
+		
+		checkCross();
 		
 		log.debug(printOrders());
 		
@@ -98,6 +101,8 @@ public class BaseMatcher implements Matcher {
 			}
 			
 			book.get(order.price()).add(order);
+			
+			checkCross();
 			
 			log.debug(printOrders());
 			
@@ -145,7 +150,7 @@ public class BaseMatcher implements Matcher {
 		
 		log.debug("Recieved Update {}", update);
 		
-		final List<Fill> newFills = new ArrayList<>();
+		final List<Fill> fills = new ArrayList<>();
 		
 		switch(update.type()) {
 		case Book:
@@ -157,8 +162,7 @@ public class BaseMatcher implements Matcher {
 					
 					if(e.getKey().compareTo(update.top().bid().price()) <= 0) {
 						for(final OrderState o: e.getValue()) {
-							newFills.add(MessageFactory.fill(o, update.time(), 
-									o.qty()));
+							fills.add(Messages.fill(o, update.time(), o.qty()));
 						}
 					}
 				}
@@ -171,8 +175,7 @@ public class BaseMatcher implements Matcher {
 			
 					if(e.getKey().compareTo(update.top().ask().price()) >= 0) {
 						for(final OrderState o: e.getValue()) {
-							newFills.add(MessageFactory.fill(o, update.time(), 
-									o.qty()));
+							fills.add(Messages.fill(o, update.time(), o.qty()));
 						}
 					}
 				}
@@ -189,8 +192,7 @@ public class BaseMatcher implements Matcher {
 					if(e.getKey().compareTo(update.trade().price()) < 0) {
 						
 						for(final OrderState o : e.getValue()) {
-							newFills.add(MessageFactory.fill(o, update.time(), 
-									o.qty()));
+							fills.add(Messages.fill(o, update.time(), o.qty()));
 						}
 						
 					} else break;
@@ -204,8 +206,7 @@ public class BaseMatcher implements Matcher {
 					if(e.getKey().compareTo(update.trade().price()) > 0) {
 						
 						for(final OrderState o : e.getValue()) {
-							newFills.add(MessageFactory.fill(o, update.time(), 
-									o.qty()));
+							fills.add(Messages.fill(o, update.time(), o.qty()));
 						}
 						
 					} else break;
@@ -219,7 +220,7 @@ public class BaseMatcher implements Matcher {
 				/* Allocate */
 				for(final Entry<OrderState, Fill> e : allocator.allocate(
 						side(Book.Side.ASK).get(price), update).entrySet()) {
-					newFills.add(e.getValue());
+					fills.add(e.getValue());
 				}
 				
 			} else if(bids.firstKey().equals(update.trade().price())) {
@@ -227,7 +228,7 @@ public class BaseMatcher implements Matcher {
 				/* Allocate */
 				for(final Entry<OrderState, Fill> e : allocator.allocate(
 						side(Book.Side.BID).get(price), update).entrySet()) {
-					newFills.add(e.getValue());
+					fills.add(e.getValue());
 				}
 			}
 			
@@ -235,11 +236,11 @@ public class BaseMatcher implements Matcher {
 		}
 
 		/* Remove all orders which were completely filled */
-		for(final Fill fill : newFills) {
-			checkRemove(fill);
+		for(final Fill fill : fills) {
+			checkFill(fill);
 		}
 		
-		for(final Fill fill : newFills) {
+		for(final Fill fill : fills) {
 			observer.onNext(fill);
 		}
 		
@@ -247,7 +248,7 @@ public class BaseMatcher implements Matcher {
 		
 	}
 
-	private void checkRemove(final Fill fill) {
+	private void checkFill(final Fill fill) {
 		
 		final Price fillRx = fill.price();
 		final Size fillQty = fill.qty();
@@ -271,6 +272,30 @@ public class BaseMatcher implements Matcher {
 		
 	}
 	
+	/*
+	 * Called after new orders or price change modifies.
+	 * Checks for crossed orders, fills them.
+	 */
+	private void checkCross() {
+		
+		// 2 while loops for crossed pass
+		for(final Entry<Price, List<OrderState>> e : asks.entrySet()) {
+			
+			// if()
+			
+		}
+		
+		for(final Entry<Price, List<OrderState>> e : bids.entrySet()) {
+			
+			
+			
+		}
+		
+		
+		// check for top prices equal
+		
+	}
+	
 	private NavigableMap<Price, List<OrderState>> side(final Book.Side side) {
 		return side == Book.Side.ASK ? asks : bids;
 	}
@@ -280,7 +305,8 @@ public class BaseMatcher implements Matcher {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\n");
 		
-		for(final Entry<Price, List<OrderState>> e : asks.descendingMap().entrySet()) {
+		for(final Entry<Price, List<OrderState>> e : 
+				asks.descendingMap().entrySet()) {
 			
 			sb.append(e.getKey().toString()).append(" : ");
 			
