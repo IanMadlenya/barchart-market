@@ -9,6 +9,8 @@ import com.barchart.feed.api.model.data.Book.Side;
 import com.barchart.feed.api.model.data.Book.Top;
 import com.barchart.feed.api.model.data.Trade;
 import com.barchart.feed.api.model.meta.Instrument;
+import com.barchart.feed.api.util.Identifier;
+import com.barchart.market.matcher.api.model.Account;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
 import com.barchart.market.matcher.api.model.order.Order;
@@ -28,6 +30,9 @@ public final class Messages {
 		
 		return new Fill() {
 
+			@Override
+			public Instrument instrument() {return order.instrument();}
+			
 			@Override
 			public boolean isNull() {return false;}
 
@@ -51,7 +56,7 @@ public final class Messages {
 				return "{Fill : " + order + " : " + executed 
 						+ " : " + qty + "}";
 			}
-			
+
 		};
 		
 	}
@@ -110,19 +115,19 @@ public final class Messages {
 		
 	}
 	
-	public static Order order(final Instrument instrument, final String id, 
-			final Time created,	final Side side, final Price price, 
-			final Size qty) {
+	public static Order order(final Instrument instrument, final String id,
+			final Order.Type type, final Time created,final Side side, 
+			final Price price, final Size qty) {
 		
-		return new BaseOrderState(instrument, id, created, side, price, qty);
+		return new BaseOrderState(instrument, id, type, created, side, price, qty);
 		
 	}
 	
 	public static OrderState orderState(final Instrument instrument, final String id, 
-			final Time created,	final Side side, final Price price, 
-			final Size qty) {
+			final Order.Type type, final Time created, final Side side, 
+			final Price price, final Size qty) {
 		
-		return new BaseOrderState(instrument, id, created, side, price, qty);
+		return new BaseOrderState(instrument, id, type, created, side, price, qty);
 		
 	}
 	
@@ -198,10 +203,38 @@ public final class Messages {
 		
 	}
 	
+	public static Account account(final String name, final String fcmActNo,
+			final String fcmID, final String fcmName) {
+		
+		return new Account(){
+
+			@Override
+			public String name() {return name;}
+
+			@Override
+			public String FCMAccountNumber() {return fcmActNo;}
+
+			@Override
+			public String FCMID() {return fcmID;}
+
+			@Override
+			public String FCMName() {return fcmName;}
+
+			@Override
+			public Identifier id() {return null;}
+
+			@Override
+			public boolean isNull() {return false;}
+			
+		};
+		
+	}
+	
 	private static class BaseOrderState implements OrderState {
 		
 		private final Instrument instrument; 
 		private final String id;
+		private final Type type;
 		private final Time created;	
 		private final Side side;
 		
@@ -209,11 +242,12 @@ public final class Messages {
 		private Price price; 
 		private Size qty;
 		
-		BaseOrderState(final Instrument instrument, final String id, 
-				final Time created,	final Side side, final Price price, 
-				final Size qty) {
+		BaseOrderState(final Instrument instrument, final String id,
+				final Order.Type type, final Time created,	
+				final Side side, final Price price,	final Size qty) {
 			this.instrument = instrument;
 			this.id = id;
+			this.type = type;
 			this.created = created;
 			this.side = side;
 			modified = created;
@@ -229,6 +263,11 @@ public final class Messages {
 		@Override
 		public String id() {
 			return id;
+		}
+		
+		@Override
+		public Type type() {
+			return type;
 		}
 
 		@Override

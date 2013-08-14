@@ -2,7 +2,7 @@ package com.barchart.market.matcher.api;
 
 import com.barchart.feed.api.util.Identifiable;
 import com.barchart.feed.api.util.Identifier;
-import com.barchart.market.matcher.api.account.Account;
+import com.barchart.market.matcher.api.portfolio.Portfolio;
 
 /**
  * Verified user, has multiple accounts
@@ -12,7 +12,7 @@ import com.barchart.market.matcher.api.account.Account;
  */
 public interface User extends Identifiable {
 	
-	Account account(Identifier id);
+	Portfolio account(Identifier id);
 	
 	@Override
 	Identifier id();

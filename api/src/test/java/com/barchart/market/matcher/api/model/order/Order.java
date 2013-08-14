@@ -8,6 +8,12 @@ import com.barchart.util.value.api.Time;
 
 public interface Order {
 	
+	enum Type {
+		MARKET, LIMIT, STOP, STOP_LIMIT
+	}
+	
+	Type type();
+	
 	Instrument instrument();
 	
 	String id();

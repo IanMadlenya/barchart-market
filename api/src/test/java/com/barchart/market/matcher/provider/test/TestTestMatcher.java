@@ -14,6 +14,7 @@ import com.barchart.market.matcher.api.match.Matcher;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.Update.Type;
 import com.barchart.market.matcher.api.model.order.Fill;
+import com.barchart.market.matcher.api.model.order.Order;
 import com.barchart.market.matcher.api.model.order.OrderState;
 import com.barchart.market.matcher.provider.BaseMatcher;
 import com.barchart.market.matcher.provider.Messages;
@@ -33,22 +34,22 @@ public class TestTestMatcher {
 		
 		final Time time = f.newTime(System.currentTimeMillis(), "TIMEZONE");
 		
-		orders.put(1, Messages.orderState(Instrument.NULL, "ORDER_1", time,
+		orders.put(1, Messages.orderState(Instrument.NULL, "ORDER_1", Order.Type.LIMIT, time,
 				Side.ASK, f.newPrice(5, 1), f.newSize(10, 0)));
 		
-		orders.put(2, Messages.orderState(Instrument.NULL, "ORDER_2", time,
+		orders.put(2, Messages.orderState(Instrument.NULL, "ORDER_2", Order.Type.LIMIT, time,
 				Side.ASK, f.newPrice(5, 1), f.newSize(5, 0)));
 		
-		orders.put(3, Messages.orderState(Instrument.NULL, "ORDER_3", time,
+		orders.put(3, Messages.orderState(Instrument.NULL, "ORDER_3", Order.Type.LIMIT, time,
 				Side.ASK, f.newPrice(45, 0), f.newSize(10, 0)));
 		
-		orders.put(4, Messages.orderState(Instrument.NULL, "ORDER_4", time,
+		orders.put(4, Messages.orderState(Instrument.NULL, "ORDER_4", Order.Type.LIMIT, time,
 				Side.BID, f.newPrice(4, 1), f.newSize(5, 0)));
 		
-		orders.put(5, Messages.orderState(Instrument.NULL, "ORDER_5", time,
+		orders.put(5, Messages.orderState(Instrument.NULL, "ORDER_5", Order.Type.LIMIT, time,
 				Side.BID, f.newPrice(35, 0), f.newSize(10, 0)));
 		
-		orders.put(6, Messages.orderState(Instrument.NULL, "ORDER_6", time,
+		orders.put(6, Messages.orderState(Instrument.NULL, "ORDER_6", Order.Type.LIMIT, time,
 				Side.BID, f.newPrice(3, 1), f.newSize(20, 0)));
 	
 		updates.add(Messages.update(Type.Trade, Book.Top.NULL, 

@@ -13,18 +13,19 @@ import com.barchart.feed.api.model.meta.Instrument;
 import com.barchart.feed.api.util.Observer;
 import com.barchart.market.matcher.api.OrderResult;
 import com.barchart.market.matcher.api.Result.Type;
-import com.barchart.market.matcher.api.account.Account;
-import com.barchart.market.matcher.api.account.AccountHandler;
-import com.barchart.market.matcher.api.account.Position;
 import com.barchart.market.matcher.api.match.Matcher;
+import com.barchart.market.matcher.api.model.Account;
 import com.barchart.market.matcher.api.model.Message;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
+import com.barchart.market.matcher.api.model.order.OrderReject;
 import com.barchart.market.matcher.api.model.order.OrderRequest;
 import com.barchart.market.matcher.api.model.order.OrderState;
+import com.barchart.market.matcher.api.portfolio.Portfolio;
+import com.barchart.market.matcher.api.portfolio.PortfolioHandler;
 import com.barchart.util.value.api.Time;
 
-public class BaseAccountHandler implements AccountHandler {
+public class BasePortfolioHandler implements PortfolioHandler {
 
 	private final AgentBuilder agentBuilder;
 	
@@ -37,7 +38,7 @@ public class BaseAccountHandler implements AccountHandler {
 	
 	private volatile Observer<Message> outsideWorld = null;
 	
-	public BaseAccountHandler(final AgentBuilder agentBuilder, 
+	public BasePortfolioHandler(final AgentBuilder agentBuilder, 
 			final Account account) {
 		
 		this.agentBuilder = agentBuilder;
@@ -82,7 +83,18 @@ public class BaseAccountHandler implements AccountHandler {
 		final OrderResult result = risk.evaluate(orderRequest);
 		
 		if(result.type() == Type.FAILURE) {
+			
 			// Send reject back to source
+			outsideWorld.onNext(new OrderReject(){
+
+				// Will need account, user info
+				
+				@Override
+				public boolean isNull() {
+					return false;
+				}
+				
+			});
 		}
 		
 		final OrderState order = result.result();
@@ -109,9 +121,13 @@ public class BaseAccountHandler implements AccountHandler {
 	}
 	
 	@Override
-	public Position position(final Instrument instrument) {
-		
+	public Portfolio portfolio() {
 		return null;
+	}
+	
+	@Override
+	public Account account() {
+		return account;
 	}
 	
 	private class FillObserver implements Observer<Fill> {
@@ -210,10 +226,12 @@ public class BaseAccountHandler implements AccountHandler {
 			topAgent.include(instrument);
 		}
 		
+		@SuppressWarnings("unused")
 		public Agent trade() {
 			return tradeAgent;
 		}
 		
+		@SuppressWarnings("unused")
 		public Agent top() {
 			return topAgent;
 		}
