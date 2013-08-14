@@ -11,6 +11,7 @@ import com.barchart.feed.api.model.data.Trade;
 import com.barchart.feed.api.model.meta.Instrument;
 import com.barchart.feed.api.util.Identifier;
 import com.barchart.market.matcher.api.model.Account;
+import com.barchart.market.matcher.api.model.FCM;
 import com.barchart.market.matcher.api.model.Update;
 import com.barchart.market.matcher.api.model.order.Fill;
 import com.barchart.market.matcher.api.model.order.Order;
@@ -212,13 +213,35 @@ public final class Messages {
 			public String name() {return name;}
 
 			@Override
-			public String FCMAccountNumber() {return fcmActNo;}
+			public FCM fcm() {
+				return new FCM() {
+				
+					@Override
+					public String accountNo() {return fcmActNo;}
+		
+					@Override
+					public String name() {return fcmName;}
 
-			@Override
-			public String FCMID() {return fcmID;}
+					@Override
+					public Identifier id() {
+						return new Identifier() {
 
-			@Override
-			public String FCMName() {return fcmName;}
+							@Override
+							public int compareTo(Identifier o) {
+								return fcmID.compareTo(o.toString());
+							}
+
+							@Override
+							public boolean isNull() {return false;}
+							
+							@Override
+							public String toString() {return fcmID;}
+							
+						};
+					}
+					
+				};
+			}
 
 			@Override
 			public Identifier id() {return null;}

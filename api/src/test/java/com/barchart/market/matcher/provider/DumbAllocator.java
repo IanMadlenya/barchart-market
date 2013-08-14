@@ -1,6 +1,6 @@
 package com.barchart.market.matcher.provider;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,9 +18,7 @@ public class DumbAllocator implements Allocator {
 	public Map<OrderState, Fill> allocate(final List<OrderState> orders, 
 			final Update update) {
 		
-		final Map<OrderState, Fill> result = new HashMap<>();
-		
-		return result;
+		return Collections.emptyMap();
 	}
 
 }
